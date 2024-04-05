@@ -6,12 +6,13 @@ export const tpl_2 = ({
   courseNum,
   userName,
   dateStr,
+  imageUrl
 }: ShareImageTemplateData) => ({
   type: "div",
   props: {
     tw: "w-full h-full flex flex-col overflow-hidden",
     style: {
-      backgroundImage: `url('https://picsum.photos/400/600?blur&random=${Date.now()}')`,
+      backgroundImage: `url(${imageUrl ?? `https://picsum.photos/400/600?blur&random=${Date.now()}`})`,
       fontFamily: '"EBGaramond", "nzgrKangxi", serif',
     },
     children: [

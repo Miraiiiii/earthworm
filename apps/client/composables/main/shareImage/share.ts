@@ -22,6 +22,7 @@ export interface ShareImageTemplateData {
   enSentence: string;
   userName: string;
   dateStr: string;
+  imageUrl?: string;
 }
 
 export const imageTemplates: Record<
@@ -74,6 +75,12 @@ export interface GalleryItem {
   canvasEl: HTMLCanvasElement;
 }
 
+interface GenerateImageBasicData {
+  courseNum: string;
+  userName: string;
+  dateStr: string;
+}
+
 export function useGenerateShareImage() {
   const { zhSentence, enSentence } = useDailySentence();
 
@@ -82,12 +89,16 @@ export function useGenerateShareImage() {
   const format = "jpg";
   const fullFormat = `image/${format}`;
   const galleryImgs = ref<GalleryItem[]>([]);
+  const allowImageUpload = ref(true);
+  const imageUploadRef = ref<HTMLInputElement>();
+  const generateImageBasicData = ref<GenerateImageBasicData>();
 
   const chosenTemplate = (
     templateKey: ShareImageTemplate,
     courseNum: string,
     userName: string,
-    dateStr: string
+    dateStr: string,
+    imageUrl?: string
   ) => {
     return imageTemplates[templateKey]({
       courseNum,
@@ -95,6 +106,7 @@ export function useGenerateShareImage() {
       enSentence: enSentence.value,
       userName,
       dateStr,
+      imageUrl
     });
   };
 
@@ -103,6 +115,8 @@ export function useGenerateShareImage() {
     userName: string,
     dateStr: string
   ) => {
+    generateImageBasicData.value = { courseNum, userName, dateStr }
+    allowImageUpload.value = true
     Object.values(ShareImageTemplate).forEach(async (template, index) => {
       generateImage(courseNum, template, index, userName, dateStr);
     });
@@ -113,7 +127,8 @@ export function useGenerateShareImage() {
     template: ShareImageTemplate,
     index: number,
     userName: string,
-    dateStr: string
+    dateStr: string,
+    imageUrl?: string
   ) => {
     const canvasEl = initCanvas();
     galleryImgs.value[index] = {
@@ -121,7 +136,7 @@ export function useGenerateShareImage() {
       canvasEl,
     };
     const svg = await satori(
-      chosenTemplate(template, courseNum, userName, dateStr),
+      chosenTemplate(template, courseNum, userName, dateStr, imageUrl),
       await generateConfig()
     ).catch((e) => {
       console.error("Error generating SVG");
@@ -157,6 +172,30 @@ export function useGenerateShareImage() {
     currImageIndex.value = index;
   };
 
+  const handleUploadImageChange = (event: Event) => {
+    const target = event?.target as HTMLInputElement
+    const files = target?.files
+    if (files?.length) {
+      const file = files[0]
+      const fileReader = new FileReader()
+      fileReader.readAsDataURL(file)
+      fileReader.onload = async () => {
+        const imageUrl = fileReader.result as string
+        const { courseNum = '', userName = '', dateStr = '' } = generateImageBasicData.value ?? {}
+        const index = galleryImgs.value.length
+        await generateImage(courseNum, ShareImageTemplate.TPL_2, index, userName, dateStr, imageUrl)
+        allowImageUpload.value = false
+      }
+      fileReader.onerror = () => {
+        allowImageUpload.value = true
+      }
+    }
+  }
+
+  const handleUploadImage = () => {
+    imageUploadRef.value?.click()
+  }
+
   const preLoadFont = () => {
     fontEn();
     fontZh();
@@ -173,5 +212,9 @@ export function useGenerateShareImage() {
     clearShareImageSrc,
     handleSelectImage,
     currImageIndex,
+    imageUploadRef,
+    allowImageUpload,
+    handleUploadImage,
+    handleUploadImageChange
   };
 }

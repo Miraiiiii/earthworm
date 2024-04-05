@@ -28,6 +28,16 @@
                 :alt="`Card ${index}`"
               />
             </div>
+            <div
+              v-if="allowImageUpload"
+              class="border-2 border-gray-500 border-dashed gallery-item w-14 mb-2 h-[4.5rem] cursor-pointer rounded-sm overflow-hidden mr-2"
+              @click="handleUploadImage"
+            >
+              <input ref="imageUploadRef" type="file" class="hidden" @change="handleUploadImageChange">
+              <button type="button" className="btn btn-ghost rounded-none p-0 h-full w-full hover:bg-gray-200">
+                <svg class="h-8 w-8 text-gray-500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024"><path fill="currentColor" d="M482 152h60q8 0 8 8v704q0 8-8 8h-60q-8 0-8-8V160q0-8 8-8"/><path fill="currentColor" d="M192 474h672q8 0 8 8v60q0 8-8 8H160q-8 0-8-8v-60q0-8 8-8Z"/></svg>
+              </button>
+            </div>
           </div>
           <div
             :class="['w-[19rem] h-[27rem]', { skeleton: !shareImageSrc }]"
@@ -66,8 +76,8 @@
 import { ref, watch } from "vue";
 import { convertTitleToNumber } from "~/composables/main/shareImage/convert";
 import {
-  useGenerateShareImage,
-  useShareModal,
+useGenerateShareImage,
+useShareModal,
 } from "~/composables/main/shareImage/share";
 import { useCourseStore } from "~/store/course";
 import { useUserStore } from "~/store/user";
@@ -85,6 +95,10 @@ const {
   clearShareImageSrc,
   handleSelectImage,
   currImageIndex,
+  imageUploadRef,
+  allowImageUpload,
+  handleUploadImage,
+  handleUploadImageChange
 } = useGenerateShareImage();
 
 watch(shareModalVisible, (newVal) => {
